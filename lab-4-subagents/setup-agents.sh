@@ -14,11 +14,11 @@ rm -f ~/.qwen/agents/*.md 2>/dev/null
 
 # Copy agent configurations from the correct location
 echo "Installing Docker Optimizer agent..."
-mv /root/agents/docker-optimizer.md ~/.qwen/agents/
+cp agents/docker-optimizer.md ~/.qwen/agents/
 echo "✅ Docker Optimizer agent installed"
 
 echo "Installing Terraform Security agent..."
-mv /root/agents/terraform-security.md ~/.qwen/agents/
+cp agents/terraform-security.md ~/.qwen/agents/
 echo "✅ Terraform Security agent installed"
 
 # Verify installation
