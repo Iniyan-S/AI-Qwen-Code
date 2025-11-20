@@ -15,7 +15,7 @@ echo ""
 # Function to check command existence
 check_command() {
     if command -v $1 &> /dev/null; then
-        echo -e "${GREEN}✓${NC} $1 is installed"
+        echo -e "${GREEN}✓${NC} $1 is already installed"
         return 0
     else
         echo -e "${RED}✗${NC} $1 is not installed"
@@ -50,14 +50,14 @@ check_command uvx || {
 echo -e "\n${BLUE}Step 2: Setting up Qwen configuration...${NC}"
 echo "----------------------------------------"
 echo -e "${YELLOW}Creating .qwen directory...${NC}"
-mkdir -p /root/.qwen
+mkdir -p $HOME/.qwen
 
 echo -e "${YELLOW}Copying settings.json with MCP servers configuration...${NC}"
-if [ -f /root/settings.json ]; then
-    cp /root/settings_before.json /root/.qwen/settings.json
-    echo -e "${GREEN}✓${NC} Configuration copied to /root/.qwen/settings.json"
+if [ -f ./settings.json ]; then
+    cp ./settings.json $HOME/.qwen/settings.json
+    echo -e "${GREEN}✓${NC} Configuration copied to $HOME/.qwen/settings.json"
 else
-    echo -e "${RED}❌ settings.json not found in /root/${NC}"
+    echo -e "${RED}❌ settings.json not found in the current directory.${NC}"
     exit 1
 fi
 
@@ -65,16 +65,16 @@ fi
 echo -e "\n${BLUE}Step 3: Verifying MCP Server Configuration...${NC}"
 echo "----------------------------------------"
 echo -e "${YELLOW}Configured MCP Servers:${NC}"
-if [ -f /root/.qwen/settings.json ]; then
+if [ -f $HOME/.qwen/settings.json ]; then
     # Extract MCP server names from settings.json
     echo -e "${BLUE}Reading configuration...${NC}"
     if command -v jq &> /dev/null; then
-        jq '.mcpServers | keys[]' /root/.qwen/settings.json 2>/dev/null | sed 's/"//g' | while read server; do
+        jq '.mcpServers | keys[]' $HOME/.qwen/settings.json 2>/dev/null | sed 's/"//g' | while read server; do
             echo -e "  ${GREEN}•${NC} $server"
         done
     else
         # Fallback if jq is not available
-        grep -E '"cfn-mcp-server"|"awslabs.aws-documentation-mcp-server"|"awslabs.terraform-mcp-server"' /root/.qwen/settings.json &> /dev/null && {
+        grep -E '"cfn-mcp-server"|"awslabs.aws-documentation-mcp-server"|"awslabs.terraform-mcp-server"' $HOME/.qwen/settings.json &> /dev/null && {
             echo -e "  ${GREEN}•${NC} cfn-mcp-server"
             echo -e "  ${GREEN}•${NC} awslabs.aws-documentation-mcp-server"
             echo -e "  ${GREEN}•${NC} awslabs.terraform-mcp-server"
@@ -88,11 +88,11 @@ echo "----------------------------------------"
 show_command "qwen mcp list"
 
 # Capture the output
-qwen mcp list > /root/qwen-mcp-configured.txt 2>&1
+qwen mcp list > $HOME/qwen-mcp-configured.txt 2>&1
 
 # Show the output
 echo -e "${BLUE}MCP Server List Output:${NC}"
-cat /root/qwen-mcp-configured.txt
+cat $HOME/qwen-mcp-configured.txt
 echo ""
 
 # Verify all servers are configured
@@ -102,7 +102,7 @@ echo "----------------------------------------"
 SERVERS_OK=true
 
 # Check CloudFormation MCP Server
-if grep -q "cfn-mcp-server" /root/qwen-mcp-configured.txt; then
+if grep -q "cfn-mcp-server" $HOME/qwen-mcp-configured.txt; then
     echo -e "${GREEN}✓ CloudFormation MCP Server:${NC} Configured"
 else
     echo -e "${RED}✗ CloudFormation MCP Server:${NC} Not found"
@@ -110,7 +110,7 @@ else
 fi
 
 # Check AWS Documentation MCP Server
-if grep -q "aws-documentation-mcp-server\|awslabs.aws-documentation-mcp-server" /root/qwen-mcp-configured.txt; then
+if grep -q "aws-documentation-mcp-server\|awslabs.aws-documentation-mcp-server" $HOME/qwen-mcp-configured.txt; then
     echo -e "${GREEN}✓ AWS Documentation MCP Server:${NC} Configured"
 else
     echo -e "${RED}✗ AWS Documentation MCP Server:${NC} Not found"
@@ -118,7 +118,7 @@ else
 fi
 
 # Check Terraform MCP Server
-if grep -q "terraform-mcp-server\|awslabs.terraform-mcp-server" /root/qwen-mcp-configured.txt; then
+if grep -q "terraform-mcp-server\|awslabs.terraform-mcp-server" $HOME/qwen-mcp-configured.txt; then
     echo -e "${GREEN}✓ Terraform MCP Server:${NC} Configured"
 else
     echo -e "${RED}✗ Terraform MCP Server:${NC} Not found"
@@ -128,16 +128,16 @@ fi
 # Final validation
 if [ "$SERVERS_OK" = true ]; then
     # Add validation markers
-    echo "" >> /root/qwen-mcp-configured.txt
-    echo "QWEN_MCP_CONFIGURED" >> /root/qwen-mcp-configured.txt
-    echo "CFN_MCP_CONFIGURED" >> /root/qwen-mcp-configured.txt
-    echo "AWS_DOCS_MCP_CONFIGURED" >> /root/qwen-mcp-configured.txt
-    echo "TERRAFORM_MCP_CONFIGURED" >> /root/qwen-mcp-configured.txt
+    echo "" >> $HOME/qwen-mcp-configured.txt
+    echo "QWEN_MCP_CONFIGURED" >> $HOME/qwen-mcp-configured.txt
+    echo "CFN_MCP_CONFIGURED" >> $HOME/qwen-mcp-configured.txt
+    echo "AWS_DOCS_MCP_CONFIGURED" >> $HOME/qwen-mcp-configured.txt
+    echo "TERRAFORM_MCP_CONFIGURED" >> $HOME/qwen-mcp-configured.txt
 
     echo -e "\n${GREEN}✅ All MCP Servers successfully configured!${NC}"
     echo -e "${GREEN}📄 Configuration saved to:${NC}"
-    echo -e "    • /root/.qwen/settings.json (MCP configuration)"
-    echo -e "    • /root/qwen-mcp-configured.txt (status output)"
+    echo -e "    • $HOME/.qwen/settings.json (MCP configuration)"
+    echo -e "    • $HOME/qwen-mcp-configured.txt (status output)"
 
     # Display summary
     echo -e "\n${BLUE}📊 MCP Server Summary:${NC}"
@@ -162,5 +162,5 @@ echo "In Qwen, use the /mcp command to check server status:"
 echo -e "  ${BLUE}/mcp${NC}"
 echo ""
 echo "Configuration files:"
-echo -e "  ${BLUE}cat /root/.qwen/settings.json${NC} - MCP server configuration"
-echo -e "  ${BLUE}cat /root/qwen-mcp-configured.txt${NC} - Setup validation output"
+echo -e "  ${BLUE}cat $HOME/.qwen/settings.json${NC} - MCP server configuration"
+echo -e "  ${BLUE}cat $HOME/qwen-mcp-configured.txt${NC} - Setup validation output"
